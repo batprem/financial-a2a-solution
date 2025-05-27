@@ -1,7 +1,6 @@
-from a2a.server.agent_execution import (
-    AgentExecutor,
-    RequestContext,
-)
+from typing import override
+
+from a2a.server.agent_execution import AgentExecutor, RequestContext
 from a2a.server.events import EventQueue
 from a2a.types import (
     TaskArtifactUpdateEvent,
@@ -10,9 +9,11 @@ from a2a.types import (
     TaskStatusUpdateEvent,
 )
 from a2a.utils import new_agent_text_message, new_task, new_text_artifact
-from typing import override
 
-from financial_a2a_solution.balance_sheet_agent.agent import Agent, MCPParameters
+from financial_a2a_solution.balance_sheet_agent.agent import (
+    Agent,
+    MCPParameters,
+)
 
 
 class BalanceSheetAgentExecutor(AgentExecutor):
@@ -65,7 +66,6 @@ class BalanceSheetAgentExecutor(AgentExecutor):
                     )
                 )
             elif event.require_user_input:
-                
                 event_queue.enqueue_event(
                     TaskStatusUpdateEvent(
                         status=TaskStatus(
@@ -100,5 +100,7 @@ class BalanceSheetAgentExecutor(AgentExecutor):
                 )
 
     @override
-    async def cancel(self, context: RequestContext, event_queue: EventQueue) -> None:
+    async def cancel(
+        self, context: RequestContext, event_queue: EventQueue
+    ) -> None:
         raise Exception("cancel not supported")

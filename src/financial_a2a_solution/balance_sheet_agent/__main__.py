@@ -10,14 +10,16 @@ from a2a.types import (
     AgentCapabilities,
     AgentCard,
     AgentSkill,
-    TaskQueryParams,
-    Task,
+    Message,
     MessageSendParams,
-    Message
+    Task,
+    TaskQueryParams,
 )
-
-from financial_a2a_solution.balance_sheet_agent.agent_executor import BalanceSheetAgentExecutor
 from dotenv import load_dotenv
+
+from financial_a2a_solution.balance_sheet_agent.agent_executor import (
+    BalanceSheetAgentExecutor,
+)
 
 
 class A2ARequestHandler(DefaultRequestHandler):
@@ -38,9 +40,9 @@ class A2ARequestHandler(DefaultRequestHandler):
 
 
 @click.command()
-@click.option('--host', 'host', default='localhost')
-@click.option('--port', 'port', default=9999)
-@click.option('--env-file', 'env_file', default='.env')
+@click.option("--host", "host", default="localhost")
+@click.option("--port", "port", default=9999)
+@click.option("--env-file", "env_file", default=".env")
 def main(host: str, port: int, env_file: str):
     """Start the A2A Repo Agent server.
 
@@ -53,27 +55,30 @@ def main(host: str, port: int, env_file: str):
     """  # noqa: E501
     load_dotenv(env_file)
     skill = AgentSkill(
-        id='financial_balance_sheet_agent',
-        name='Financial Balance Sheet Agent',
-        description='The agent will look up the information about financial balance sheet, do data analysis and answer the question about any stock in Thai stock market.',  # noqa: E501
-        tags=['Financial Balance Sheet'],
-        examples=['What is financial balance sheet of KBANK?'],
+        id="financial_balance_sheet_agent",
+        name="Financial Balance Sheet Agent",
+        description="The agent will look up the information about financial balance sheet, do data analysis and answer the question about any stock in Thai stock market.",  # noqa: E501
+        tags=["Financial Balance Sheet"],
+        examples=["What is financial balance sheet of KBANK?"],
     )
 
     agent_card = AgentCard(
-        name='Financial Balance Sheet Agent',
-        description='This agent can access financial statements of the Thai stock company and give brief summary ',  # noqa: E501
-        url=f'http://{host}:{port}/',
-        version='1.0.0',
-        defaultInputModes=['text'],
-        defaultOutputModes=['text'],
+        name="Financial Balance Sheet Agent",
+        description="This agent can access financial statements of the Thai stock company and give brief summary ",  # noqa: E501
+        url=f"http://{host}:{port}/",
+        version="1.0.0",
+        defaultInputModes=["text"],
+        defaultOutputModes=["text"],
         capabilities=AgentCapabilities(
-            inputModes=['text'],
-            outputModes=['text'],
+            inputModes=["text"],
+            outputModes=["text"],
             streaming=True,
         ),
         skills=[skill],
-        examples=['What is financial balance sheet of KBANK?', 'Analyze financial balance sheet of KBANK'],
+        examples=[
+            "What is financial balance sheet of KBANK?",
+            "Analyze financial balance sheet of KBANK",
+        ],
     )
 
     task_store = InMemoryTaskStore()
@@ -88,5 +93,5 @@ def main(host: str, port: int, env_file: str):
     uvicorn.run(server.build(), host=host, port=port)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

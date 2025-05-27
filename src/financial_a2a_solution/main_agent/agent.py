@@ -1,7 +1,7 @@
 import asyncio
 import json
 import re
-from collections.abc import Callable, Generator, AsyncGenerator
+from collections.abc import AsyncGenerator, Callable, Generator
 from pathlib import Path
 from typing import Literal
 from uuid import uuid4
@@ -23,7 +23,6 @@ from a2a.types import (
 from jinja2 import Template
 
 from financial_a2a_solution.main_agent.constant import GOOGLE_API_KEY
-
 
 dir_path = Path(__file__).parent
 
@@ -77,12 +76,16 @@ class Agent:
         async with httpx.AsyncClient() as httpx_client:
             if self.agent_urls:
                 card_resolvers = [
-                    A2ACardResolver(httpx_client, url) for url in self.agent_urls
+                    A2ACardResolver(httpx_client, url)
+                    for url in self.agent_urls
                 ]
             else:
                 card_resolvers = []
             agent_cards = await asyncio.gather(
-                *[card_resolver.get_agent_card() for card_resolver in card_resolvers]
+                *[
+                    card_resolver.get_agent_card()
+                    for card_resolver in card_resolvers
+                ]
             )
             agents_registry = {
                 agent_card.name: agent_card for agent_card in agent_cards
@@ -99,10 +102,7 @@ class Agent:
         Returns:
             str or Generator[str]: The LLM response as a string or generator, depending on mode.
         """  # noqa: E501
-
-
-        for chunk in stream_llm(prompt):
-            yield chunk
+        yield from stream_llm(prompt)
 
     async def decide(
         self,
@@ -147,7 +147,9 @@ class Agent:
             return json.loads(match.group(1))
         return []
 
-    async def send_message_to_an_agent(self, agent_card: AgentCard, message: str):
+    async def send_message_to_an_agent(
+        self, agent_card: AgentCard, message: str
+    ):
         """Send a message to a specific agent and yield the streaming response.
 
         Args:
@@ -168,19 +170,20 @@ class Agent:
                 )
             )
 
-            streaming_request = SendStreamingMessageRequest(params=message_send_params)
+            streaming_request = SendStreamingMessageRequest(
+                params=message_send_params
+            )
             async for chunk in client.send_message_streaming(streaming_request):
                 if isinstance(
                     chunk.root, SendStreamingMessageSuccessResponse
                 ) and isinstance(chunk.root.result, TaskStatusUpdateEvent):
                     result_status_message = chunk.root.result.status.message
-                    
+
                     if result_status_message is not None:
                         for part in result_status_message.parts:
                             if isinstance(part.root, TextPart):
                                 await asyncio.sleep(0.1)
                                 yield part.root.text
-
 
     async def stream(self, question: str):
         """Stream the process of answering a question, possibly involving multiple agents.
@@ -195,7 +198,9 @@ class Agent:
         for _ in range(3):
             agents_registry, agent_prompt = await self.get_agents()
             response = ""
-            async for chunk in self.decide(question, agent_prompt, agent_answers):
+            async for chunk in self.decide(
+                question, agent_prompt, agent_answers
+            ):
                 response += chunk
                 if self.token_stream_callback:
                     self.token_stream_callback(chunk)

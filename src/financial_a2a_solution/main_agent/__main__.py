@@ -1,13 +1,11 @@
 import asyncio
-from typing import Literal
-
+from typing import Literal, cast
 
 import asyncclick as click
 import colorama
-from financial_a2a_solution.main_agent.agent import Agent
 from dotenv import load_dotenv
 
-from typing import cast
+from financial_a2a_solution.main_agent.agent import Agent
 
 
 @click.command()

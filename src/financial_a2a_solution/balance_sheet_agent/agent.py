@@ -1,32 +1,34 @@
+import asyncio
+import re
+from collections.abc import AsyncGenerator, Callable, Generator
+from pathlib import Path
+from typing import Literal
+
+import commentjson as json
+import google.generativeai as genai
+from jinja2 import Template
+from mcp.types import CallToolResult
+from pydantic import BaseModel
+
 from financial_a2a_solution.balance_sheet_agent.constant import GOOGLE_API_KEY
 from financial_a2a_solution.balance_sheet_agent.mcp import (
     call_mcp_tool,
     get_mcp_tool_prompt,
 )
 
-import asyncio
-import commentjson as json
-import re
-from collections.abc import AsyncGenerator, Callable, Generator
-from pathlib import Path
-from typing import Literal
-
-import google.generativeai as genai
-from jinja2 import Template
-from mcp.types import CallToolResult
-
-
-from pydantic import BaseModel
 
 class StreamChunk(BaseModel):
+    """Stream chunk."""
     is_task_complete: bool
     require_user_input: bool
     content: str
 
+
 class ToolCall(BaseModel):
+    """Tool call."""
     tool: str
     arguments: dict
-    isError: bool
+    isError: bool # noqa: N815
     result: str
 
 
@@ -55,6 +57,12 @@ def stream_llm(prompt: str) -> Generator[str, None]:
 
 
 class MCPParameters(BaseModel):
+    """MCP parameters.
+
+    Args:
+        url (str | None): The URL of the MCP server.
+        cmd (list[str] | None): The command to run the MCP server.
+    """
     url: str | None = None
     cmd: list[str] | None = None
 
@@ -85,7 +93,9 @@ class Agent:
             for chunk in stream_llm(question):
                 yield chunk
             return
-        tool_prompt = await get_mcp_tool_prompt(**self.mcp_parameters.model_dump())
+        tool_prompt = await get_mcp_tool_prompt(
+            **self.mcp_parameters.model_dump()
+        )
         if called_tools:
             called_tools_prompt = called_tools_history_template.render(
                 called_tools=called_tools
@@ -120,7 +130,7 @@ class Agent:
             tools (list[dict]): The tools to call.
         """
         if self.mcp_parameters is None:
-            return tuple()
+            return ()
         return await asyncio.gather(
             *[
                 call_mcp_tool(
@@ -163,15 +173,17 @@ class Agent:
                 break
             results = await self.call_tool(tools)
 
-            called_tools.extend([
-                ToolCall(
-                    tool=tool["name"],
-                    arguments=tool["arguments"],
-                    isError=result.isError,
-                    result=getattr(result.content[0], "text", ""),
-                )
-                for tool, result in zip(tools, results, strict=True)
-            ])
+            called_tools.extend(
+                [
+                    ToolCall(
+                        tool=tool["name"],
+                        arguments=tool["arguments"],
+                        isError=result.isError,
+                        result=getattr(result.content[0], "text", ""),
+                    )
+                    for tool, result in zip(tools, results, strict=True)
+                ]
+            )
             called_tools_history = called_tools_history_template.render(
                 called_tools=called_tools, question=question
             )

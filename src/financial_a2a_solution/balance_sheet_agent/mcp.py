@@ -1,13 +1,14 @@
 import asyncio
+import json
 from pathlib import Path
 
 from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
 from mcp.client.stdio import StdioServerParameters, stdio_client
 from mcp.types import CallToolResult, TextContent
+
 from financial_a2a_solution.the_solution import get_tools_prompt
 from financial_a2a_solution.types import Tool
-import json
 
 dir_path = Path(__file__).parent
 
@@ -115,7 +116,8 @@ if __name__ == "__main__":
     print(asyncio.run(get_mcp_tool_prompt(url="https://gitmcp.io/google/A2A")))
     result = asyncio.run(
         call_mcp_tool(
-            url="https://gitmcp.io/google/A2A", tool_name="fetch_A2A_documentation"
+            url="https://gitmcp.io/google/A2A",
+            tool_name="fetch_A2A_documentation",
         )
     )
     for content in result.content:
