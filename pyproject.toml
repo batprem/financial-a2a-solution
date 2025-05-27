@@ -1,0 +1,37 @@
+[project]
+name = "financial-a2a-solution"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "prem", email = "prem.ch@ku.th" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "a2a-sdk>=0.2.4",
+    "asyncclick>=8.1.8",
+    "colorama>=0.4.6",
+    "commentjson>=0.9.0",
+    "fastmcp>=2.5.1",
+    "google-generativeai>=0.8.5",
+    "jinja2>=3.1.6",
+    "pydantic>=2.11.5",
+    "python-dotenv>=1.1.0",
+    "textual>=3.2.0",
+]
+
+[project.scripts]
+financial-a2a-solution = "financial_a2a_solution:main"
+balance-sheet-agent = "financial_a2a_solution.balance_sheet_agent.__main__:main"
+main-agent = "financial_a2a_solution.main_agent.__main__:main"
+
+[tool.maturin]
+module-name = "financial_a2a_solution.the_solution"
+python-packages = ["financial_a2a_solution"]
+python-source = "src"
+
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+
