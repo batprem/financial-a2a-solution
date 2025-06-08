@@ -20,6 +20,7 @@ from a2a.types import (
     TaskStatusUpdateEvent,
     TextPart,
 )
+from a2a.client.errors import A2AClientHTTPError
 from jinja2 import Template
 
 from financial_a2a_solution.main_agent.constant import GOOGLE_API_KEY
@@ -173,17 +174,20 @@ class Agent:
             streaming_request = SendStreamingMessageRequest(
                 params=message_send_params
             )
-            async for chunk in client.send_message_streaming(streaming_request):
-                if isinstance(
-                    chunk.root, SendStreamingMessageSuccessResponse
-                ) and isinstance(chunk.root.result, TaskStatusUpdateEvent):
-                    result_status_message = chunk.root.result.status.message
+            try:
+                async for chunk in client.send_message_streaming(streaming_request):
+                    if isinstance(
+                        chunk.root, SendStreamingMessageSuccessResponse
+                    ) and isinstance(chunk.root.result, TaskStatusUpdateEvent):
+                        result_status_message = chunk.root.result.status.message
 
-                    if result_status_message is not None:
-                        for part in result_status_message.parts:
-                            if isinstance(part.root, TextPart):
-                                await asyncio.sleep(0.1)
-                                yield part.root.text
+                        if result_status_message is not None:
+                            for part in result_status_message.parts:
+                                if isinstance(part.root, TextPart):
+                                    await asyncio.sleep(0.1)
+                                    yield part.root.text
+            except A2AClientHTTPError as e:
+                yield f"\nClient connection error: {e}"
 
     async def stream(self, question: str):
         """Stream the process of answering a question, possibly involving multiple agents.
@@ -195,9 +199,10 @@ class Agent:
             str: Streaming output, including agent responses and intermediate steps.
         """  # noqa: E501
         agent_answers: list[dict] = []
-        for _ in range(3):
+        for _ in range(2):
             agents_registry, agent_prompt = await self.get_agents()
             response = ""
+            yield "<main_agent>\n"
             async for chunk in self.decide(
                 question, agent_prompt, agent_answers
             ):
@@ -205,13 +210,14 @@ class Agent:
                 if self.token_stream_callback:
                     self.token_stream_callback(chunk)
                 yield chunk
+            yield "</main_agent>\n"
 
             agents = self.extract_agents(response)
             if agents:
                 for agent in agents:
                     agent_response = ""
                     agent_card = agents_registry[agent["name"]]
-                    yield f'<Agent name="{agent["name"]}">\n'
+                    yield f'<agent name="{agent["name"]}">\n'
                     async for chunk in self.send_message_to_an_agent(
                         agent_card, agent["prompt"]
                     ):
@@ -219,7 +225,7 @@ class Agent:
                         if self.token_stream_callback:
                             self.token_stream_callback(chunk)
                         yield chunk
-                    yield "</Agent>\n"
+                    yield "</agent>\n"
                     match = re.search(
                         r"<Answer>(.*?)</Answer>", agent_response, re.DOTALL
                     )
@@ -248,9 +254,9 @@ if __name__ == "__main__":
     #     )
 
     #     async for chunk in agent.stream("What is A2A protocol?"):
-    #         if chunk.startswith('<Agent name="'):
+    #         if chunk.startswith('<agent name="'):
     #             print(colorama.Fore.CYAN + chunk, end="", flush=True)
-    #         elif chunk.startswith("</Agent>"):
+    #         elif chunk.startswith("</agent>"):
     #             print(colorama.Fore.RESET + chunk, end="", flush=True)
     #         else:
     #             print(chunk, end="", flush=True)

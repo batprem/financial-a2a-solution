@@ -12,8 +12,8 @@ from a2a.types import (
 )
 from dotenv import load_dotenv
 
-from financial_a2a_solution.balance_sheet_agent.agent_executor import (
-    BalanceSheetAgentExecutor,
+from financial_a2a_solution.technical_analyser_agent.agent_executor import (
+    TechnicalAnalyserAgentExecutor,
 )
 
 
@@ -34,16 +34,16 @@ def main(host: str, port: int, env_file: str):
     """  # noqa: E501
     load_dotenv(env_file)
     skill = AgentSkill(
-        id="financial_balance_sheet_agent",
-        name="Financial Balance Sheet Agent",
-        description="The agent will look up the information about financial balance sheet, do data analysis and answer the question about any stock in Thai stock market.",  # noqa: E501
-        tags=["Financial Balance Sheet"],
-        examples=["What is financial balance sheet of KBANK?"],
+        id="technical_analyser_agent",
+        name="Financial Technical Analyser Agent",
+        description="This agent fetchs financial data from TradingView in the format OHLCV table and perform backtesting using technical indicators.",  # noqa: E501
+        tags=["Financial Technical Analyser"],
+        examples=["Analyse KBANK using 10 and 20 days moving average?"],
     )
 
     agent_card = AgentCard(
-        name="Financial Balance Sheet Agent",
-        description="This agent can access financial statements of the Thai stock company and give brief summary ",  # noqa: E501
+        name="Financial Technical Analyser Agent",
+        description="This agent can perform techical analysis like an expert. However, only simple moving average cross is supported for this version.",  # noqa: E501
         url=f"http://{host}:{port}/",
         version="1.0.0",
         defaultInputModes=["text"],
@@ -55,14 +55,15 @@ def main(host: str, port: int, env_file: str):
         ),
         skills=[skill],
         examples=[
-            "What is financial balance sheet of KBANK?",
-            "Analyze financial balance sheet of KBANK",
+            "Analyse KBANK using 10 and 20 days moving average?",
+            "Analyse SET:KBANK using 10 and 20 days moving average?",
+            "Analyse META stock"
         ],
     )
 
     task_store = InMemoryTaskStore()
     request_handler = DefaultRequestHandler(
-        agent_executor=BalanceSheetAgentExecutor(),
+        agent_executor=TechnicalAnalyserAgentExecutor(),
         task_store=task_store,
     )
 

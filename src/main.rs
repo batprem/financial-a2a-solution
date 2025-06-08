@@ -1,12 +1,12 @@
 mod prompts;
 
-use prompts::Tool;
-use prompts::get_tera;
-use pyo3::prelude::*;
-use tera::{Tera, Context};
 use once_cell::sync::Lazy;
+use prompts::get_tera;
+use prompts::Tool;
+use pyo3::prelude::*;
 use pyo3::FromPyObject;
 use serde::{Deserialize, Serialize};
+use tera::{Context, Tera};
 
 static TERA: Lazy<Tera> = Lazy::new(get_tera);
 
@@ -17,14 +17,12 @@ pub struct Animal {
     age: u32,
 }
 
-
 #[pyclass]
 #[derive(Clone, Debug)]
 pub struct Person {
     name: String,
     age: u32,
 }
-
 
 #[pymethods]
 impl Person {
@@ -48,7 +46,10 @@ struct Item {
 
 fn main() {
     let person = Person::new("David".to_string(), 13);
-    let animal = Animal { name: "Doggo".to_string(), age: 10 };
+    let animal = Animal {
+        name: "Doggo".to_string(),
+        age: 10,
+    };
     let result = person.try_python_struct(animal);
     println!("{}", result);
 }

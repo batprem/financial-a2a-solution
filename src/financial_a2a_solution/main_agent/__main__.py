@@ -9,14 +9,12 @@ from financial_a2a_solution.main_agent.agent import Agent
 
 
 @click.command()
-@click.option("--host", "host", default="localhost")
-@click.option("--port", "port", default=9999)
+@click.option("--host", "host", default=["http://localhost:9999", "http://localhost:9998"], multiple=True)
 @click.option("--mode", "mode", default="streaming")
 @click.option("--question", "question", required=True)
 @click.option("--env-file", "env_file", default=".env")
 async def a_main(
-    host: str,
-    port: int,
+    host: list[str],
     mode: Literal["completion", "streaming"],
     question: str,
     env_file: str,
@@ -33,13 +31,15 @@ async def a_main(
     agent = Agent(
         mode="stream",
         token_stream_callback=None,
-        agent_urls=[f"http://{host}:{port}/"],
-        agent_prompt="Act as a financial expert and answer the question in a formal, robust and convincing tone.",
+        agent_urls=host,
+        agent_prompt="Act as a financial expert and answer the question in a formal, robust and convincing tone.",  # noqa: E501
     )
+
     async for chunk in agent.stream(question):
-        if chunk.startswith('<Agent name="'):
+
+        if chunk.startswith('<agent name="'):
             print(cast(str, colorama.Fore.CYAN) + chunk, end="", flush=True)
-        elif chunk.startswith("</Agent>"):
+        elif chunk.startswith("</agent>"):
             print(cast(str, colorama.Fore.RESET) + chunk, end="", flush=True)
         else:
             print(chunk, end="", flush=True)

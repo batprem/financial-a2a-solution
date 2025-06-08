@@ -10,8 +10,10 @@ from jinja2 import Template
 from mcp.types import CallToolResult
 from pydantic import BaseModel
 
-from financial_a2a_solution.balance_sheet_agent.constant import GOOGLE_API_KEY
-from financial_a2a_solution.balance_sheet_agent.mcp import (
+from financial_a2a_solution.technical_analyser_agent.constant import (
+    GOOGLE_API_KEY,
+)
+from financial_a2a_solution.technical_analyser_agent.mcp import (
     call_mcp_tool,
     get_mcp_tool_prompt,
 )
@@ -31,7 +33,6 @@ dir_path = Path(__file__).parent
 
 with Path(dir_path / "decide.jinja").open("r") as f:
     decide_template = Template(f.read())
-
 
 
 def stream_llm(prompt: str) -> Generator[str, None]:
@@ -69,6 +70,7 @@ class Agent:
         mode: Literal["complete", "stream"] = "stream",
         token_stream_callback: Callable[[str], None] | None = None,
         mcp_parameters: MCPParameters | None = None,
+        role: str | None = None,
     ):
         self.mode = mode
         self.token_stream_callback = token_stream_callback
@@ -193,14 +195,29 @@ if __name__ == "__main__":
     from dotenv import load_dotenv
 
     load_dotenv()
+
     agent = Agent(
         token_stream_callback=lambda token: print(token, end="", flush=True),
-        mcp_parameters=MCPParameters(url="https://gitmcp.io/google/A2A"),
+        mcp_parameters=MCPParameters(
+            cmd=[
+                "uvx",
+                "--with",
+                "websocket",
+                "--with",
+                "websocket-client",
+                "--directory",
+                "/Users/premchotipanit/Documents/",
+                "technical-backtesting-mcp",
+            ]
+        ),
+        role="Financial technical expert analyser",
     )
 
     async def main():
         """Main function."""
-        async for chunk in agent.stream("What is A2A Protocol?"):
-            print(chunk)
+        async for chunk in agent.stream(
+            "Analyse SET:KBANK using 10 and 20 days moving average?"
+        ):
+            print(chunk.content, flush=True, end="")
 
     asyncio.run(main())
