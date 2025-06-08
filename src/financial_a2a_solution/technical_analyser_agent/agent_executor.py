@@ -1,5 +1,5 @@
 from typing import override
-
+from pathlib import Path
 from a2a.server.agent_execution import AgentExecutor, RequestContext
 from a2a.server.events import EventQueue
 from a2a.types import (
@@ -22,17 +22,21 @@ class TechnicalAnalyserAgentExecutor(AgentExecutor):
     def __init__(self):
         self.agent = Agent(
             mode="stream",
-            token_stream_callback=lambda token: print(token, end="", flush=True),
-            mcp_parameters=MCPParameters(cmd=[
+            token_stream_callback=lambda token: print(
+                token, end="", flush=True
+            ),
+            mcp_parameters=MCPParameters(
+                cmd=[
                     "uvx",
                     "--with",
                     "websocket",
                     "--with",
                     "websocket-client",
                     "--directory",
-                    "/Users/premchotipanit/Documents/",
+                    str(Path.cwd()),
                     "technical-backtesting-mcp",
-                ]),
+                ]
+            ),
         )
 
     @override
