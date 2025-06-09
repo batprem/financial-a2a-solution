@@ -6,7 +6,6 @@ from typing import Literal
 
 import commentjson as json
 import google.generativeai as genai
-from jinja2 import Template
 from mcp.types import CallToolResult
 from pydantic import BaseModel
 
