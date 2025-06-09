@@ -1,8 +1,7 @@
-{%- if role -%}
-Act as a {{ role }}
-{%- endif -%}
+use tera::{Context, Tera};
 
-You duty is to decide which tool to use to answer the question.
+
+const TEMPLATE: &str = r#"You duty is to decide which tool to use to answer the question.
 The question is:
 
 {{ question }}
@@ -46,9 +45,12 @@ Note:
 - You `tool_name` must be one of the tool names in the tools list, and you must spell it correctly.
 - If there is no need to call any tool, answer the question
 
-
-You must answer in the following format:
-{%if tone%}
+{%- if tone -%}
 Answer tone: {{tone}}
-{%endif%}
+{%- endif -%}
+"#;
 
+#[allow(dead_code)]
+pub fn get_tool_decide_prompt(tera: &mut Tera) {
+    tera.add_raw_template("tool_decide", TEMPLATE).unwrap();
+}

@@ -16,12 +16,13 @@ pub struct Tool {
     inputSchema: String,
 }
 
-#[allow(dead_code)]
-pub fn get_tools_prompt(tera: &mut Tera) {
-    let template = r#"Tools{% for tool in tools %}
+const TEMPLATE: &str = r#"Tools{% for tool in tools %}
 - {{loop.index}}: {{ tool.name }}
 - Description: {{ tool.description }}
 - Input Schema: {{tool.inputSchema}}{% endfor %}
 "#;
-    tera.add_raw_template("tools", template).unwrap();
+
+#[allow(dead_code)]
+pub fn get_tools_prompt(tera: &mut Tera) {
+    tera.add_raw_template("tools", TEMPLATE).unwrap();
 }

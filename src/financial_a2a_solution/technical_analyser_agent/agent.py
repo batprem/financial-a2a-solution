@@ -1,12 +1,12 @@
 import asyncio
 import re
 from collections.abc import AsyncGenerator, Callable, Generator
-from pathlib import Path
+
 from typing import Literal
 
 import commentjson as json
 import google.generativeai as genai
-from jinja2 import Template
+
 from mcp.types import CallToolResult
 from pydantic import BaseModel
 
@@ -27,12 +27,6 @@ class StreamChunk(BaseModel):
     is_task_complete: bool
     require_user_input: bool
     content: str
-
-
-dir_path = Path(__file__).parent
-
-with Path(dir_path / "decide.jinja").open("r") as f:
-    decide_template = Template(f.read())
 
 
 def stream_llm(prompt: str) -> Generator[str, None]:
@@ -65,6 +59,11 @@ class MCPParameters(BaseModel):
 class Agent:
     """Agent for interacting with the Google Gemini LLM in different modes."""
 
+    mode: Literal["complete", "stream"]
+    token_stream_callback: Callable[[str], None] | None
+    mcp_parameters: MCPParameters | None
+    role: str | None = None
+
     def __init__(
         self,
         mode: Literal["complete", "stream"] = "stream",
@@ -75,6 +74,7 @@ class Agent:
         self.mode = mode
         self.token_stream_callback = token_stream_callback
         self.mcp_parameters = mcp_parameters
+        self.role = role
 
     async def decide(
         self, question: str, called_tools: list[CalledTool] | None = None
@@ -99,7 +99,7 @@ class Agent:
         else:
             called_tools_prompt = ""
 
-        prompt = decide_template.render(
+        prompt = prompts.get_tool_decide_prompt(
             question=question,
             tool_prompt=tool_prompt,
             called_tools=called_tools_prompt,
@@ -201,12 +201,10 @@ if __name__ == "__main__":
         mcp_parameters=MCPParameters(
             cmd=[
                 "uvx",
-                "--with",
-                "websocket",
+                # "--with",
+                # "websocket",
                 "--with",
                 "websocket-client",
-                "--directory",
-                "/Users/premchotipanit/Documents/",
                 "technical-backtesting-mcp",
             ]
         ),

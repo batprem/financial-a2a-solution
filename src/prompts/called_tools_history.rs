@@ -10,9 +10,7 @@ pub struct CalledTool {
     pub result: String,
 }
 
-#[allow(dead_code)]
-pub fn get_called_tools_history_prompt(tera: &mut Tera) {
-    let template = r#"
+const TEMPLATE: &str = r#"
 Previous tools have been called. {% for tool in called_tools %}
 - Tool: {{ tool.name }}
 - Arguments: {{ tool.arguments }}
@@ -22,5 +20,9 @@ Previous tools have been called. {% for tool in called_tools %}
 ```
 {%- endfor -%}
 "#;
+
+#[allow(dead_code)]
+pub fn get_called_tools_history_prompt(tera: &mut Tera) {
+    let template = TEMPLATE;
     tera.add_raw_template("called_tools_history", template).unwrap();
 }

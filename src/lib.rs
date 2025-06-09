@@ -27,6 +27,19 @@ pub fn get_called_tools_history_prompt(py_called_tools: Bound<'_, PyAny>) -> PyR
     Ok(TERA.render("called_tools_history", &context).unwrap())
 }
 
+#[pyfunction]
+#[pyo3(signature = (question, called_tools, tool_prompt, tone=None))]
+pub fn get_tool_decide_prompt(question: &str, called_tools: &str, tool_prompt: &str, tone: Option<&str>) -> PyResult<String> {
+    let mut context = Context::new();
+    context.insert("question", question);
+    context.insert("called_tools", called_tools);
+    context.insert("tool_prompt", tool_prompt);
+    if let Some(tone) = tone {
+        context.insert("tone", tone);
+    }
+    Ok(TERA.render("tool_decide", &context).unwrap())
+}
+
 fn register_utils_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let utils_module = PyModule::new_bound(parent_module.py(), "utils")?;
     utils_module.add_function(wrap_pyfunction!(parse_streamed_tags, &utils_module)?)?;
@@ -38,6 +51,7 @@ fn register_prompts_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> 
     let prompts_module = PyModule::new_bound(parent_module.py(), "prompts")?;
     prompts_module.add_function(wrap_pyfunction!(get_tools_prompt, &prompts_module)?)?;
     prompts_module.add_function(wrap_pyfunction!(get_called_tools_history_prompt, &prompts_module)?)?;
+    prompts_module.add_function(wrap_pyfunction!(get_tool_decide_prompt, &prompts_module)?)?;
     parent_module.add_submodule(&prompts_module)?;
     Ok(())
 }

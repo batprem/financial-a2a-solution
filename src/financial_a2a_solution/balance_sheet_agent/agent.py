@@ -29,10 +29,6 @@ class StreamChunk(BaseModel):
 
 dir_path = Path(__file__).parent
 
-with Path(dir_path / "decide.jinja").open("r") as f:
-    decide_template = Template(f.read())
-
-
 
 def stream_llm(prompt: str) -> Generator[str, None]:
     """Stream LLM response.
@@ -97,7 +93,7 @@ class Agent:
         else:
             called_tools_prompt = ""
 
-        prompt = decide_template.render(
+        prompt = prompts.get_tool_decide_prompt(
             question=question,
             tool_prompt=tool_prompt,
             called_tools=called_tools_prompt,

@@ -119,12 +119,10 @@ if __name__ == "__main__":
             get_mcp_tool_prompt(
                 cmd=[
                     "uvx",
-                    "--with",
-                    "websocket",
+                    # "--with",
+                    # "websocket",
                     "--with",
                     "websocket-client",
-                    "--directory",
-                    "/Users/premchotipanit/Documents/",
                     "technical-backtesting-mcp",
                 ]
             )
@@ -134,12 +132,10 @@ if __name__ == "__main__":
         call_mcp_tool(
             cmd=[
                 "uvx",
-                "--with",
-                "websocket",
+                # "--with",
+                # "websocket",
                 "--with",
                 "websocket-client",
-                "--directory",
-                "/Users/premchotipanit/Documents/",
                 "technical-backtesting-mcp",
             ],
             tool_name="back_test_asset_price_cross_moving_average",

@@ -1,5 +1,4 @@
 from typing import override
-from pathlib import Path
 from a2a.server.agent_execution import AgentExecutor, RequestContext
 from a2a.server.events import EventQueue
 from a2a.types import (
@@ -28,12 +27,10 @@ class TechnicalAnalyserAgentExecutor(AgentExecutor):
             mcp_parameters=MCPParameters(
                 cmd=[
                     "uvx",
-                    "--with",
-                    "websocket",
+                    # "--with",
+                    # "websocket",
                     "--with",
                     "websocket-client",
-                    "--directory",
-                    str(Path.cwd()),
                     "technical-backtesting-mcp",
                 ]
             ),
