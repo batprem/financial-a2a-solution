@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import TypedDict, Protocol
+from typing import TypedDict
 
 
 class Tag(TypedDict):
