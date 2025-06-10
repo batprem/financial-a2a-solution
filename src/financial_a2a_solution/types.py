@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import TypedDict
+from typing import TypedDict, Protocol
 
 
 class Tag(TypedDict):
@@ -20,3 +20,15 @@ class CalledTool(BaseModel):
     arguments: str
     isError: bool
     result: str
+
+
+class AgentAnswer(BaseModel):
+    name: str
+    prompt: str
+    answer: str
+
+
+class Skill(BaseModel):
+    name: str
+    description: str
+    examples: list[str]

@@ -2,7 +2,6 @@ import asyncio
 import json
 import re
 from collections.abc import AsyncGenerator, Callable, Generator
-from pathlib import Path
 from typing import Literal
 from uuid import uuid4
 
@@ -21,20 +20,11 @@ from a2a.types import (
     TextPart,
 )
 from a2a.client.errors import A2AClientHTTPError
-from jinja2 import Template
+
 
 from financial_a2a_solution.main_agent.constant import GOOGLE_API_KEY
-
-dir_path = Path(__file__).parent
-
-with Path(dir_path / "decide.jinja").open("r") as f:
-    decide_template = Template(f.read())
-
-with Path(dir_path / "agents.jinja").open("r") as f:
-    agents_template = Template(f.read())
-
-with Path(dir_path / "agent_answer.jinja").open("r") as f:
-    agent_answer_template = Template(f.read())
+from financial_a2a_solution.the_solution import prompts
+from financial_a2a_solution.types import AgentAnswer
 
 
 def stream_llm(prompt: str) -> Generator[str]:
@@ -91,7 +81,7 @@ class Agent:
             agents_registry = {
                 agent_card.name: agent_card for agent_card in agent_cards
             }
-            agent_prompt = agents_template.render(agent_cards=agent_cards)
+            agent_prompt = prompts.get_available_agents_prompt(agent_cards)
             return agents_registry, agent_prompt
 
     def call_llm(self, prompt: str) -> Generator[str, None]:
@@ -109,7 +99,7 @@ class Agent:
         self,
         question: str,
         agents_prompt: str,
-        called_agents: list[dict] | None = None,
+        called_agents: list[AgentAnswer] | None = None,
     ) -> AsyncGenerator[str, None]:
         """Decide which agent(s) to use to answer the question.
 
@@ -122,12 +112,12 @@ class Agent:
             Generator[str, None]: The LLM's response as a generator of strings.
         """  # noqa: E501
         if called_agents:
-            call_agent_prompt = agent_answer_template.render(
-                called_agents=called_agents
+            call_agent_prompt = prompts.get_agent_answer_prompt(
+                py_called_agents=called_agents
             )
         else:
             call_agent_prompt = ""
-        prompt = decide_template.render(
+        prompt = prompts.get_agent_decide_prompt(
             question=question,
             agent_prompt=agents_prompt,
             call_agent_prompt=call_agent_prompt,
@@ -175,7 +165,9 @@ class Agent:
                 params=message_send_params
             )
             try:
-                async for chunk in client.send_message_streaming(streaming_request):
+                async for chunk in client.send_message_streaming(
+                    streaming_request
+                ):
                     if isinstance(
                         chunk.root, SendStreamingMessageSuccessResponse
                     ) and isinstance(chunk.root.result, TaskStatusUpdateEvent):
@@ -198,7 +190,7 @@ class Agent:
         Yields:
             str: Streaming output, including agent responses and intermediate steps.
         """  # noqa: E501
-        agent_answers: list[dict] = []
+        agent_answers: list[AgentAnswer] = []
         for _ in range(2):
             agents_registry, agent_prompt = await self.get_agents()
             response = ""
@@ -231,36 +223,36 @@ class Agent:
                     )
                     answer = match.group(1).strip() if match else agent_response
                     agent_answers.append(
-                        {
-                            "name": agent["name"],
-                            "prompt": agent["prompt"],
-                            "answer": answer,
-                        }
+                        AgentAnswer(
+                            name=agent["name"],
+                            prompt=agent["prompt"],
+                            answer=answer,
+                        )
                     )
             else:
                 return
 
 
 if __name__ == "__main__":
-    # import asyncio
-    # import colorama
+    import asyncio
+    import colorama
 
-    # async def main():
-    #     """Main function to run the A2A Repo Agent client."""
-    #     agent = Agent(
-    #         mode="stream",
-    #         token_stream_callback=None,
-    #         agent_urls=["http://localhost:9999/"],
-    #     )
+    async def main():
+        """Main function to run the A2A Repo Agent client."""
+        agent = Agent(
+            mode="stream",
+            token_stream_callback=None,
+            agent_urls=["http://localhost:9999/"],
+        )
 
-    #     async for chunk in agent.stream("What is A2A protocol?"):
-    #         if chunk.startswith('<agent name="'):
-    #             print(colorama.Fore.CYAN + chunk, end="", flush=True)
-    #         elif chunk.startswith("</agent>"):
-    #             print(colorama.Fore.RESET + chunk, end="", flush=True)
-    #         else:
-    #             print(chunk, end="", flush=True)
+        async for chunk in agent.stream("How is KBANK balance sheet?"):
+            if chunk.startswith('<agent name="'):
+                print(str(colorama.Fore.CYAN) + chunk, end="", flush=True)
+            elif chunk.startswith("</agent>"):
+                print(str(colorama.Fore.RESET) + chunk, end="", flush=True)
+            else:
+                print(chunk, end="", flush=True)
 
-    # asyncio.run(main())
-    prompt = decide_template.render(tone="Financial expert")
-    print(prompt)
+    asyncio.run(main())
+    # prompt = decide_template.render(tone="Financial expert")
+    # print(prompt)

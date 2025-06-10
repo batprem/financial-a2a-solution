@@ -3,7 +3,7 @@ mod utils;
 
 use once_cell::sync::Lazy;
 use prompts::get_tera;
-use prompts::{Tool, CalledTool};
+use prompts::{Tool, CalledTool, AgentAnswer, AgentCard};
 use pyo3::prelude::*;
 use tera::{Context, Tera};
 use utils::parse_streamed_tags;
@@ -40,6 +40,35 @@ pub fn get_tool_decide_prompt(question: &str, called_tools: &str, tool_prompt: &
     Ok(TERA.render("tool_decide", &context).unwrap())
 }
 
+#[pyfunction]
+pub fn get_available_agents_prompt(py_agent_cards: Bound<'_, PyAny>) -> PyResult<String> {
+    let agent_cards: Vec<AgentCard> = py_agent_cards.extract()?;
+    let mut context = Context::new();
+    context.insert("agent_cards", &agent_cards);
+    Ok(TERA.render("available_agents", &context).unwrap())
+}
+
+#[pyfunction]
+pub fn get_agent_answer_prompt(py_called_agents: Bound<'_, PyAny>) -> PyResult<String> {
+    let called_agents: Vec<AgentAnswer> = py_called_agents.extract()?;
+    let mut context = Context::new();
+    context.insert("called_agents", &called_agents);
+    Ok(TERA.render("agent_answer", &context).unwrap())
+}
+
+#[pyfunction]
+#[pyo3(signature = (question, call_agent_prompt, agent_prompt, tone=None))]
+pub fn get_agent_decide_prompt(question: &str, call_agent_prompt: &str, agent_prompt: &str, tone: Option<&str>) -> PyResult<String> {
+    let mut context = Context::new();
+    context.insert("question", question);
+    context.insert("call_agent_prompt", call_agent_prompt);
+    context.insert("agent_prompt", agent_prompt);
+    if let Some(tone) = tone {
+        context.insert("tone", tone);
+    }
+    Ok(TERA.render("agent_decide", &context).unwrap())
+}
+
 fn register_utils_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let utils_module = PyModule::new_bound(parent_module.py(), "utils")?;
     utils_module.add_function(wrap_pyfunction!(parse_streamed_tags, &utils_module)?)?;
@@ -52,6 +81,9 @@ fn register_prompts_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> 
     prompts_module.add_function(wrap_pyfunction!(get_tools_prompt, &prompts_module)?)?;
     prompts_module.add_function(wrap_pyfunction!(get_called_tools_history_prompt, &prompts_module)?)?;
     prompts_module.add_function(wrap_pyfunction!(get_tool_decide_prompt, &prompts_module)?)?;
+    prompts_module.add_function(wrap_pyfunction!(get_agent_answer_prompt, &prompts_module)?)?;
+    prompts_module.add_function(wrap_pyfunction!(get_available_agents_prompt, &prompts_module)?)?;
+    prompts_module.add_function(wrap_pyfunction!(get_agent_decide_prompt, &prompts_module)?)?;
     parent_module.add_submodule(&prompts_module)?;
     Ok(())
 }

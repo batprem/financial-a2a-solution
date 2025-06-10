@@ -1,4 +1,4 @@
-use tera::{Context, Tera};
+use tera::Tera;
 
 
 const TEMPLATE: &str = r#"You duty is to decide which tool to use to answer the question.

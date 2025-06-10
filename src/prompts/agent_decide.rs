@@ -1,4 +1,7 @@
-You duty is to decide which agent to consult or ask for help to answer the question.
+use tera::Tera;
+
+
+const TEMPLATE: &str = r#"You duty is to decide which agent to consult or ask for help to answer the question.
 The question is:
 
 {{ question }}
@@ -44,4 +47,10 @@ You must answer in the following format:
 <answer>
 <Your answer here>
 </answer>
+"#;
 
+
+#[allow(dead_code)]
+pub fn get_agent_decide_prompt(tera: &mut Tera) {
+    tera.add_raw_template("agent_decide", TEMPLATE).unwrap();
+}
