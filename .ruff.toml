@@ -120,6 +120,7 @@ inline-quotes = "double"
 "*_test.py" = ["D", "ANN"]  # Ignore docstring and annotation issues in test files
 "test_*.py" = ["D", "ANN"]  # Ignore docstring and annotation issues in test files
 "types.py" = ["D", "E501", "N815"]  # Ignore docstring and annotation issues in types.py
+"src/financial_a2a_solution/tui/mock_up_data.py" = ["ANN", "D", "E501", "N815"]  # Ignore annotation issues in mock_up_data.py
 
 [format]
 docstring-code-format = true
