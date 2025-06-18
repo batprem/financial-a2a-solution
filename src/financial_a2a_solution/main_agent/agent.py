@@ -22,7 +22,10 @@ from a2a.types import (
 from a2a.client.errors import A2AClientHTTPError
 
 
-from financial_a2a_solution.main_agent.constant import GOOGLE_API_KEY
+from financial_a2a_solution.main_agent.constant import (
+    GOOGLE_API_KEY,
+    MAX_AGENTS_CALLS,
+)
 from financial_a2a_solution.the_solution import prompts
 from financial_a2a_solution.types import AgentAnswer
 
@@ -191,7 +194,7 @@ class Agent:
             str: Streaming output, including agent responses and intermediate steps.
         """  # noqa: E501
         agent_answers: list[AgentAnswer] = []
-        for _ in range(2):
+        for _ in range(MAX_AGENTS_CALLS):
             agents_registry, agent_prompt = await self.get_agents()
             response = ""
             yield "<main_agent>\n"
