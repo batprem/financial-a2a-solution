@@ -9,7 +9,12 @@ from financial_a2a_solution.main_agent.agent import Agent
 
 
 @click.command()
-@click.option("--host", "host", default=["http://localhost:9999", "http://localhost:9998"], multiple=True)
+@click.option(
+    "--host",
+    "host",
+    default=["http://localhost:9999", "http://localhost:9998"],
+    multiple=True,
+)
 @click.option("--mode", "mode", default="streaming")
 @click.option("--question", "question", required=True)
 @click.option("--env-file", "env_file", default=".env")
@@ -36,7 +41,6 @@ async def a_main(
     )
 
     async for chunk in agent.stream(question):
-
         if chunk.startswith('<agent name="'):
             print(cast(str, colorama.Fore.CYAN) + chunk, end="", flush=True)
         elif chunk.startswith("</agent>"):

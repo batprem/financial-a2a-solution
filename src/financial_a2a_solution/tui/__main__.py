@@ -172,15 +172,7 @@ class DataKarateChatApp(App):
                         create_new_main_agent_block_flag = True
 
                     if create_new_main_agent_block_flag:
-                        try:
-                            previous_agent_block = agent_blocks[-2]
-                            second_last_tag = streamed_tags[-2]
-                            self.call_from_thread(
-                                previous_agent_block.update,
-                                self.render_content(second_last_tag["content"]),
-                            )
-                        except IndexError:
-                            pass
+                        # Set the active agent name
                         main_agent = self.call_from_thread(
                             self.mount_main_agent,
                         )
@@ -206,19 +198,7 @@ class DataKarateChatApp(App):
                         create_new_agent_block_flag = True
 
                     if create_new_agent_block_flag:
-                        # Set the active agent name
                         active_agent_name = agent_name
-                        try:
-                            previous_agent_block = agent_blocks[-2]
-                            second_last_tag = streamed_tags[-2]
-                            self.call_from_thread(
-                                previous_agent_block.update,
-                                self.render_content(second_last_tag["content"]),
-                            )
-                        except IndexError:
-                            pass
-
-                        # Mount the new agent block
                         agent = self.call_from_thread(
                             self.mount_agent,
                             border_title=last_tag["attributes"].get(
@@ -262,6 +242,10 @@ async def stream_from_a2a(
         yield chunk
 
 
-if __name__ == "__main__":
+def main():
     app = DataKarateChatApp()
     app.run()
+
+
+if __name__ == "__main__":
+    main()
